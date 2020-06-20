@@ -3,7 +3,7 @@
 2. Create account
 3. Go Cloud Shell
 4: include code:
-
+<textarea>
 REGION_NAME=eastus2
 RESOURCE_GROUP=aksworkshop
 SUBNET_NAME=aks-subnet
@@ -330,6 +330,8 @@ cd
 ls
 az aks browse --resource-group aksworkshop --name aksworkshop-223
 code .bash_history 
+
+</textarea>
 
 
 
