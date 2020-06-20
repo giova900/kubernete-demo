@@ -1,2 +1,336 @@
 # kubernete-demo
-demo
+1. Go: http://portal.azure.com/
+2. Create account
+3. Go Cloud Shell
+4: include code:
+
+REGION_NAME=eastus2
+RESOURCE_GROUP=aksworkshop
+SUBNET_NAME=aks-subnet
+VNET_NAME=aks-vnet
+
+
+	
+	az network vnet create \
+    --resource-group $RESOURCE_GROUP \
+    --location $REGION_NAME \
+    --name $VNET_NAME \
+    --address-prefixes 10.0.0.0/8 \
+    --subnet-name $SUBNET_NAME \
+    --subnet-prefix 10.240.0.0/16
+	
+	az group create \
+    --name $RESOURCE_GROUP \
+    --location $REGION_NAME
+	
+	VERSION=$(az aks get-versions \
+    --location $REGION_NAME \
+    --query 'orchestrators[?!isPreview] | [-1].orchestratorVersion' \
+    --output tsv)
+	
+	AKS_CLUSTER_NAME=aksworkshop-$RANDOM
+	
+	
+	Merged "aksworkshop-223" as current context in /home/luis/.kube/config
+	
+	
+	
+	SUBNET_ID=$(az network vnet subnet show \
+    --resource-group $RESOURCE_GROUP \
+    --vnet-name $VNET_NAME \
+    --name $SUBNET_NAME \
+    --query id -o tsv)
+	
+	
+  PAY:
+	
+	az aks create \
+--resource-group $RESOURCE_GROUP \
+--name $AKS_CLUSTER_NAME \
+--vm-set-type VirtualMachineScaleSets \
+--load-balancer-sku standard \
+--location $REGION_NAME \
+--kubernetes-version $VERSION \
+--network-plugin azure \
+--vnet-subnet-id $SUBNET_ID \
+--service-cidr 10.2.0.0/24 \
+--dns-service-ip 10.2.0.10 \
+--docker-bridge-address 172.17.0.1/16 \
+--generate-ssh-keys
+
+
+FREE:
+
+az aks create \
+--resource-group $RESOURCE_GROUP \
+--name $AKS_CLUSTER_NAME \
+--node-count 2 \
+--vm-set-type VirtualMachineScaleSets \
+--load-balancer-sku standard \
+--location $REGION_NAME \
+--kubernetes-version $VERSION \
+--network-plugin azure \
+--vnet-subnet-id $SUBNET_ID \
+--service-cidr 10.2.0.0/24 \
+--dns-service-ip 10.2.0.10 \
+--docker-bridge-address 172.17.0.1/16 \
+--generate-ssh-keys
+
+
+
+
+az aks get-credentials \
+    --resource-group $RESOURCE_GROUP \
+    --name $AKS_CLUSTER_NAME
+	
+	
+	
+	
+    kubectl get nodes
+
+    kubectl get namespace
+
+    kubectl create namespace ratingsapp
+
+	
+	
+	
+	helm install ratings bitnami/mongodb \
+    --namespace ratingsapp \
+    --set mongodbUsername=lxxx,mongodbPassword=xxx,mongodbDatabase=ratingsdb
+	
+	
+	kubectl create secret generic mongosecret \
+    --namespace ratingsapp \
+    --from-literal=MONGOCONNECTION="mongodb://luis:xxx@ratings-mongodb.ratingsapp:27017/ratingsdb"
+	
+  
+	
+	CODE POD API:
+  
+  apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratings-api
+spec:
+  selector:
+    matchLabels:
+      app: ratings-api
+  template:
+    metadata:
+      labels:
+        app: ratings-api # the label for the pods and the deployments
+    spec:
+      containers:
+      - name: ratings-api
+        image: <acrname>.azurecr.io/ratings-api:v1 # IMPORTANT: update with your own repository
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000 # the application listens to this port
+        env:
+        - name: MONGODB_URI # the application expects to find the MongoDB connection details in this environment variable
+          valueFrom:
+            secretKeyRef:
+              name: mongosecret # the name of the Kubernetes secret containing the data
+              key: MONGOCONNECTION # the key inside the Kubernetes secret containing the data
+        resources:
+          requests: # minimum resources required
+            cpu: 250m
+            memory: 64Mi
+          limits: # maximum resources allocated
+            cpu: 500m
+            memory: 256Mi
+        readinessProbe: # is the container ready to receive traffic?
+          httpGet:
+            port: 3000
+            path: /healthz
+        livenessProbe: # is the container healthy?
+          httpGet:
+            port: 3000
+            path: /healthz
+  
+  
+  
+  CODE POD WEB:
+  
+  apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratings-web
+spec:
+  selector:
+    matchLabels:
+      app: ratings-web
+  template:
+    metadata:
+      labels:
+        app: ratings-web # the label for the pods and the deployments
+    spec:
+      containers:
+      - name: ratings-web
+        image: acr17556.azurecr.io/ratings-web:v1 # IMPORTANT: update with your own repository
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080 # the application listens to this port
+        env:
+        - name: API # the application expects to connect to the API at this endpoint
+          value: http://ratings-api.ratingsapp.svc.cluster.local
+        resources:
+          requests: # minimum resources required
+            cpu: 250m
+            memory: 64Mi
+          limits: # maximum resources allocated
+            cpu: 500m
+            memory: 512Mi
+            
+            
+
+
+
+DEPLOY:
+
+
+
+az aks browse --resource-group myResourceGroup --name myAKSCluster
+
+az aks get-credentials -a --resource-group aksworkshop --name aksworkshop-223
+
+az aks browse --resource-group aksworkshop --name aksworkshop-223
+
+az aks disable-addons -g aksworkshop -n aksworkshop-223 -a kube-dashboard
+
+
+
+
+
+
++ Info:
+https://docs.microsoft.com/en-us/azure/aks/
+
+https://docs.microsoft.com/en-us/learn/modules/aks-workshop/01-introduction
+
+
+
+
+
+HISTORY:
+
+
+REGION_NAME=eastus2
+RESOURCE_GROUP=aksworkshop
+SUBNET_NAME=aks-subnet
+VNET_NAME=aks-vnet
+az group create     --name $RESOURCE_GROUP     --location $REGION_NAME
+SUBNET_ID=$(az network vnet subnet show \
+    --resource-group $RESOURCE_GROUP \
+    --vnet-name $VNET_NAME \
+    --name $SUBNET_NAME \
+    --query id -o tsv)
+az network vnet create     --resource-group $RESOURCE_GROUP     --location $REGION_NAME     --name $VNET_NAME     --address-prefixes 10.0.0.0/8     --subnet-name $SUBNET_NAME     --subnet-prefix 10.240.0.0/16
+az group create     --name $RESOURCE_GROUP     --location $REGION_NAME
+VERSION=$(az aks get-versions \
+    --location $REGION_NAME \
+    --query 'orchestrators[?!isPreview] | [-1].orchestratorVersion' \
+    --output tsv)
+AKS_CLUSTER_NAME=aksworkshop-$RANDOM
+echo $AKS_CLUSTER_NAME
+echo $VERSION
+az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --vm-set-type VirtualMachineScaleSets --load-balancer-sku standard --location $REGION_NAME --kubernetes-version $VERSION --network-plugin azure --vnet-subnet-id $SUBNET_ID --service-cidr 10.2.0.0/24 --dns-service-ip 10.2.0.10 --docker-bridge-address 172.17.0.1/16 --generate-ssh-keys
+SUBNET_ID=$(az network vnet subnet show \
+    --resource-group $RESOURCE_GROUP \
+    --vnet-name $VNET_NAME \
+    --name $SUBNET_NAME \
+    --query id -o tsv)
+az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --vm-set-type VirtualMachineScaleSets --load-balancer-sku standard --location $REGION_NAME --kubernetes-version $VERSION --network-plugin azure --vnet-subnet-id $SUBNET_ID --service-cidr 10.2.0.0/24 --dns-service-ip 10.2.0.10 --docker-bridge-address 172.17.0.1/16 --generate-ssh-keys
+az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 3
+--vm-set-type VirtualMachineScaleSets --load-balancer-sku standard --location $REGION_NAME --kubernetes-version $VERSION --network-plugin azure --vnet-subnet-id $SUBNET_ID --service-cidr 10.2.0.0/24 --dns-service-ip 10.2.0.10 --docker-bridge-address 172.17.0.1/16 --generate-ssh-keys
+az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 3
+--vm-set-type VirtualMachineScaleSets --load-balancer-sku standard --location $REGION_NAME --kubernetes-version $VERSION --network-plugin azure --vnet-subnet-id $SUBNET_ID --service-cidr 10.2.0.0/24 --dns-service-ip 10.2.0.10 --docker-bridge-address 172.17.0.1/16 --generate-ssh-keys
+az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 3 --vm-set-type VirtualMachineScaleSets --load-balancer-sku standard --location $REGION_NAME --kubernetes-version $VERSION --network-plugin azure --vnet-subnet-id $SUBNET_ID --service-cidr 10.2.0.0/24 --dns-service-ip 10.2.0.10 --docker-bridge-address 172.17.0.1/16 --generate-ssh-keys
+az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --node-count 2 --vm-set-type VirtualMachineScaleSets --load-balancer-sku standard --location $REGION_NAME --kubernetes-version $VERSION --network-plugin azure --vnet-subnet-id $SUBNET_ID --service-cidr 10.2.0.0/24 --dns-service-ip 10.2.0.10 --docker-bridge-address 172.17.0.1/16 --generate-ssh-keys
+az aks get-credentials     --resource-group $RESOURCE_GROUP     --name $AKS_CLUSTER_NAME
+kubectl get nodes
+kubectl namespace
+kubectl get namespace
+kubectl create namespace ratingsapp
+ACR_NAME=acr$RANDOM
+az acr create     --resource-group $RESOURCE_GROUP     --location $REGION_NAME     --name $ACR_NAME     --sku Standard
+git clone https://github.com/MicrosoftDocs/mslearn-aks-workshop-ratings-api.git
+ls
+cd mslearn-aks-workshop-ratings-api/
+ls
+az acr build     --resource-group $RESOURCE_GROUP     --registry $ACR_NAME     --image ratings-api:v1 .
+cd ~
+git clone https://github.com/MicrosoftDocs/mslearn-aks-workshop-ratings-web.git
+ls
+cd mslearn-aks-workshop-ratings-web
+ls
+az acr build     --resource-group $RESOURCE_GROUP     --registry $ACR_NAME     --image ratings-web:v1 .
+az acr repository list     --name $ACR_NAME     --output table
+az aks update     --name $AKS_CLUSTER_NAME     --resource-group $RESOURCE_GROUP     --attach-acr $ACR_NAME
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm search repo bitnami
+helm install ratings bitnami/mongodb     --namespace ratingsapp     --set mongodbUsername=luis,mongodbPassword=xxx,mongodbDatabase=ratingsdb
+kubectl create secret generic mongosecret     --namespace ratingsapp     --from-literal=MONGOCONNECTION="mongodb://luis:xxx@ratings-mongodb.ratingsapp:27017/ratingsdb"
+kubectl describe secret mongosecret --namespace ratingsapp
+code ratings-api-deployment.yaml
+echo $ACR_NAME
+ls
+ls -a
+nano .bash_history 
+code .bash_history 
+ls
+cd mslearn-aks-workshop-ratings-web
+ls
+kubectl apply     --namespace ratingsapp     -f ratings-api-deployment.yaml
+kubectl get pods     --namespace ratingsapp     -l app=ratings-api -w
+kubectl get deployment ratings-api --namespace ratingsapp
+code ratings-api-service.yaml
+kubectl apply     --namespace ratingsapp     -f ratings-api-service.yaml
+kubectl get service ratings-api --namespace ratingsapp
+kubectl get endpoints ratings-api --namespace ratingsapp
+code ratings-web-deployment.yaml
+echo $ACR_NAME
+ls
+code ratings-api-deployment.yaml 
+code ratings-web-deployment.yaml
+kubectl apply --namespace ratingsapp -f ratings-web-deployment.yaml
+kubectl get pods --namespace ratingsapp -l app=ratings-web -w
+kubectl get deployment ratings-web --namespace ratingsapp
+code ratings-web-service.yaml
+kubectl apply     --namespace ratingsapp     -f ratings-web-service.yaml
+kubectl get service ratings-web --namespace ratingsapp -w
+kubectl apply     --namespace ratingsapp     -f ratings-web-service.yaml
+kubectl get deployment ratings-web --namespace ratingsapp
+get services
+kubectl get service ratings-web --namespace ratingsapp -w
+kubectl get pods
+kubectl get pods --namespace ratingsapp -w
+ping 127.0.0.1
+kubectl create clusterrolebinding kubernetes-dashboard --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
+az aks get-credentials -a --resource-group aksworkshop --name aksworkshop-223
+az aks browse --resource-group aksworkshop --name aksworkshop-223
+ls
+cd
+ls -a
+cd .kube/
+ls
+code config
+rm -rf config
+ls
+az aks get-credentials -a --resource-group aksworkshop --name aksworkshop-223
+ls
+code config
+az aks disable-addons -g myRG -n myAKScluster -a kube-dashboard
+az aks disable-addons -g aksworkshop -n aksworkshop-223 -a kube-dashboard
+az aks browse --resource-group aksworkshop --name aksworkshop-223
+kubectl create clusterrolebinding kubernetes-dashboard --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard
+az aks browse --resource-group aksworkshop --name aksworkshop-223
+cd
+ls
+az aks browse --resource-group aksworkshop --name aksworkshop-223
+code .bash_history 
+
+
+
+  
